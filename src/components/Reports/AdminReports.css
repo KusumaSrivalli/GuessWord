@@ -1,0 +1,68 @@
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.report-header h2 {
+  margin: 0;
+}
+
+.report-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.tab-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 16px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.08);
+  color: #d5e2f2;
+  font: inherit;
+  transition: background 0.2s ease;
+}
+
+.tab-btn.active {
+  background: linear-gradient(135deg, #4a92ff 0%, #6d5bff 100%);
+  color: #fff;
+}
+
+.tab-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.refresh-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 14px;
+  cursor: pointer;
+  background: rgba(141, 183, 255, 0.16);
+  color: #8db7ff;
+  font: inherit;
+  font-size: 0.85rem;
+  transition: background 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.refresh-btn:hover {
+  background: rgba(141, 183, 255, 0.28);
+}
+
+.report-block + .report-block {
+  margin-top: 20px;
+}
+
+.user-report + .user-report {
+  margin-top: 16px;
+}
+
+.user-report h4 {
+  margin: 0 0 8px;
+  color: #8db7ff;
+}

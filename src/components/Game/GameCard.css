@@ -1,0 +1,51 @@
+.game-area {
+  margin-top: 24px;
+}
+
+.guess-history {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.guess-history h3 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  color: #8db7ff;
+}
+
+.guess-row {
+  display: flex;
+  gap: 8px;
+}
+
+.letter-box {
+  width: 42px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  font-weight: 700;
+  color: white;
+  background: #5b667a;
+  animation: popIn 0.2s ease;
+}
+
+.letter-box.green {
+  background: #2f9e44;
+}
+
+.letter-box.orange {
+  background: #e67e22;
+}
+
+.letter-box.grey {
+  background: #5b667a;
+}
+
+@keyframes popIn {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}

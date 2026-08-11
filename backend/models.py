@@ -10,7 +10,16 @@ def get_db():
     global client, db
     if db is None:
         mongo_uri = os.environ.get('MONGO_URI', 'mongodb://localhost:27017/guessword')
-        client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
+        if 'mongodb.net' in mongo_uri or 'mongodb+srv' in mongo_uri:
+            client = MongoClient(
+                mongo_uri,
+                serverSelectionTimeoutMS=5000,
+                tls=True,
+                tlsAllowInvalidCertificates=True
+            )
+        else:
+            client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
+
         try:
             db = client.get_default_database()
         except Exception:

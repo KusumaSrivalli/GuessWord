@@ -74,48 +74,55 @@ def get_feedback(guess, target):
 
 @app.route('/api/auth/register', methods=['POST'])
 def register():
-    data = request.json
-    username = data.get('username', '')
-    password = data.get('password', '')
-    role = data.get('role', 'player')
+    try:
+        data = request.json or {}
+        username = data.get('username', '')
+        password = data.get('password', '')
+        role = data.get('role', 'player')
 
-    if role not in ['admin', 'player']:
-        return jsonify({'error': 'Invalid role'}), 400
+        if role not in ['admin', 'player']:
+            return jsonify({'error': 'Invalid role'}), 400
 
-    if not check_username(username):
-        return jsonify({'error': 'Username must be at least 5 letters and include both upper and lower case characters.'}), 400
+        if not check_username(username):
+            return jsonify({'error': 'Username must be at least 5 letters and include both upper and lower case characters.'}), 400
 
-    if not check_password(password):
-        return jsonify({'error': 'Password must be at least 5 characters with letters, numbers, and one of $ % * &.'}), 400
+        if not check_password(password):
+            return jsonify({'error': 'Password must be at least 5 characters with letters, numbers, and one of $ % * &.'}), 400
 
-    if find_user_by_username(username):
-        return jsonify({'error': 'Username already exists'}), 400
+        if find_user_by_username(username):
+            return jsonify({'error': 'Username already exists'}), 400
 
-    hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-    create_user(username, hashed_pw, role)
+        hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        create_user(username, hashed_pw, role)
 
-    return jsonify({'message': 'User registered successfully', 'user': {'username': username, 'role': role}}), 201
+        return jsonify({'message': 'User registered successfully', 'user': {'username': username, 'role': role}}), 201
+    except Exception as e:
+        return jsonify({'error': f'Database error: {str(e)}'}), 500
 
 
 @app.route('/api/auth/login', methods=['POST'])
 def login():
-    data = request.json
-    username = data.get('username', '')
-    password = data.get('password', '')
+    try:
+        data = request.json or {}
+        username = data.get('username', '')
+        password = data.get('password', '')
 
-    user = find_user_by_username(username)
-    if not user:
-        return jsonify({'error': 'Invalid credentials'}), 401
+        user = find_user_by_username(username)
+        if not user:
+            return jsonify({'error': 'Invalid credentials'}), 401
 
-    if not bcrypt.checkpw(password.encode('utf-8'), user['password'].encode('utf-8')):
-        return jsonify({'error': 'Invalid credentials'}), 401
+        if not bcrypt.checkpw(password.encode('utf-8'), user['password'].encode('utf-8')):
+            return jsonify({'error': 'Invalid credentials'}), 401
 
-    token = create_access_token(
-        identity=user['username'],
-        additional_claims={'role': user['role']}
-    )
+        token = create_access_token(
+            identity=user['username'],
+            additional_claims={'role': user['role']}
+        )
 
-    return jsonify({'token': token, 'user': {'username': user['username'], 'role': user['role']}}), 200
+        return jsonify({'token': token, 'user': {'username': user['username'], 'role': user['role']}}), 200
+    except Exception as e:
+        return jsonify({'error': f'Database error: {str(e)}'}), 500
+
 
 
 # ── Game Endpoints ───────────────────────────────────────

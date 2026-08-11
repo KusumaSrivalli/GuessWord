@@ -10,9 +10,11 @@ def get_db():
     global client, db
     if db is None:
         mongo_uri = os.environ.get('MONGO_URI', 'mongodb://localhost:27017/guessword')
-        client = MongoClient(mongo_uri)
-        # fallback to 'guessword' if uri does not contain a database name
-        db = client.get_default_database(default='guessword')
+        client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
+        try:
+            db = client.get_default_database()
+        except Exception:
+            db = client['guessword']
     return db
 
 def create_user(username, password_hash, role):
@@ -37,7 +39,16 @@ def get_random_word():
     _db = get_db()
     cursor = _db.words.aggregate([{ '$sample': { 'size': 1 } }])
     words = list(cursor)
-    return words[0]['word'] if words else None
+    if words:
+        return words[0]['word']
+        
+    default_words = [
+        "APPLE", "BRAVE", "CLOUD", "DREAM", "EAGLE", "FLAME", "GRAPE", "HONEY", "IVORY", 
+        "JUMBO", "KNIFE", "LEMON", "MANGO", "NIGHT", "OASIS", "PEARL", "QUICK", "RIVER", 
+        "STARS", "TIGER"
+    ]
+    _db.words.insert_many([{'word': w} for w in default_words])
+    return "APPLE"
 
 def create_session(user_id, username, target_word, date):
     _db = get_db()

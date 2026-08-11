@@ -1,4 +1,5 @@
 import os
+import certifi
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 from datetime import datetime
@@ -14,8 +15,7 @@ def get_db():
             client = MongoClient(
                 mongo_uri,
                 serverSelectionTimeoutMS=5000,
-                tls=True,
-                tlsAllowInvalidCertificates=True
+                tlsCAFile=certifi.where()
             )
         else:
             client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)

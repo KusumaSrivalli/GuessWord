@@ -1,0 +1,140 @@
+.game-page {
+  min-height: calc(100vh - 64px);
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px;
+  background: rgba(8, 18, 32, 0.84);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+  color: #f4f7fb;
+}
+
+.game-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 900px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.game-page-header h1 {
+  font-size: 1.6rem;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.back-btn {
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: #8db7ff;
+  padding: 8px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.game-pill {
+  font-size: 0.8rem !important;
+  padding: 6px 10px !important;
+}
+
+.game-message {
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fef3c7;
+  margin-bottom: 16px;
+  max-width: 900px;
+  width: 100%;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+/* ---- Grid ---- */
+.game-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 28px;
+}
+
+.grid-row {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.tile {
+  width: 58px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  border-radius: 4px;
+  color: #fff;
+  user-select: none;
+}
+
+.tile-empty {
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  background: transparent;
+}
+
+.tile-active {
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  background: transparent;
+  animation: popTile 0.1s ease;
+}
+
+.tile-filled {
+  border: none;
+  animation: flipIn 0.4s ease both;
+}
+
+.tile-green {
+  background: #538d4e;
+}
+
+.tile-orange {
+  background: #b59f3b;
+}
+
+.tile-grey {
+  background: #3a3a3c;
+}
+
+@keyframes popTile {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+@keyframes flipIn {
+  0%   { transform: rotateX(90deg); }
+  100% { transform: rotateX(0deg); }
+}
+
+@media (max-width: 420px) {
+  .tile {
+    width: 50px;
+    height: 50px;
+    font-size: 1.5rem;
+  }
+}

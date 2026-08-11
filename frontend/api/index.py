@@ -13,6 +13,8 @@ from flask_jwt_extended import (
     jwt_required, get_jwt_identity, get_jwt
 )
 
+from word_validation import is_valid_word
+
 from models import (
     create_user, find_user_by_username, get_random_word,
     create_session, get_session, update_session,
@@ -150,6 +152,9 @@ def make_guess():
 
     if not session_id or len(guess) != 5 or not guess.isalpha():
         return jsonify({'error': 'Invalid guess or session_id'}), 400
+
+    if not is_valid_word(guess):
+        return jsonify({'error': 'Not in word list'}), 400
 
     session = get_session(session_id)
     if not session:

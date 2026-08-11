@@ -1,0 +1,96 @@
+.keyboard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  width: 100%;
+  max-width: 650px;
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+.keyboard-row {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+  width: 100%;
+}
+
+.key {
+  flex: 1;
+  max-width: 42px;
+  height: 52px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #f4f7fb;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, transform 0.1s;
+  padding: 0;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.key:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.key:active:not(:disabled) {
+  transform: scale(0.93);
+}
+
+.key:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.key-wide {
+  flex: 1.5;
+  max-width: 64px;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+}
+
+.key-green {
+  background: #538d4e;
+  color: #fff;
+}
+
+.key-orange {
+  background: #b59f3b;
+  color: #fff;
+}
+
+.key-grey {
+  background: #3a3a3c;
+  color: #666;
+}
+
+.key-green:hover:not(:disabled) {
+  background: #5da055;
+}
+
+.key-orange:hover:not(:disabled) {
+  background: #c5a942;
+}
+
+.key-grey:hover:not(:disabled) {
+  background: #4a4a4c;
+}
+
+@media (max-width: 420px) {
+  .key {
+    height: 46px;
+    font-size: 0.8rem;
+  }
+
+  .key-wide {
+    font-size: 0.65rem;
+  }
+}

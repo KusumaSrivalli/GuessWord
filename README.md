@@ -1,16 +1,71 @@
-# React + Vite
+# Guess the Word
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A full-stack word guessing game built with React (Vite) and Flask (MongoDB).
 
-Currently, two official plugins are available:
+## Project Structure
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```
+├── backend/          # Flask REST API + MongoDB
+│   ├── app.py        # API endpoints
+│   ├── models.py     # Database operations
+│   ├── seed.py       # Seed 20 words + default users
+│   └── .env          # MongoDB URI + JWT secret
+│
+├── frontend/         # React (Vite) UI
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── Auth/       # Login & Register
+│   │   │   ├── Game/       # Game board, guess input, letter rows
+│   │   │   ├── Modal/      # Win/loss modals
+│   │   │   ├── Reports/    # Admin daily & user reports
+│   │   │   └── Header/     # App header
+│   │   ├── App.jsx         # Root component
+│   │   └── api.js          # API utility
+│   ├── api/                # Vercel serverless functions
+│   └── vercel.json         # Vercel deployment config
+│
+├── .gitignore
+└── README.md
+```
 
-## React Compiler
+## Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **User Registration** — Username (5+ letters, mixed case) + password validation
+- **Wordle-style Gameplay** — 5 guesses, green/orange/grey feedback
+- **3 Games Per Day** limit per user
+- **Admin Reports** — Daily summary & per-user stats
+- **MongoDB** storage for users, words, and game sessions
 
-## Expanding the Oxlint configuration
+## Setup
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+### Prerequisites
+- Python 3.8+
+- Node.js 18+
+- MongoDB (local or Atlas)
+
+### Backend
+```bash
+cd backend
+pip install -r requirements.txt
+python seed.py        # Seeds 20 words + default users
+python app.py         # Starts Flask on port 5000
+```
+
+### Frontend
+```bash
+cd frontend
+npm install
+npm run dev           # Starts Vite on port 5173
+```
+
+### Default Logins
+| Username | Password | Role   |
+|----------|----------|--------|
+| Admin1   | Admin1$  | Admin  |
+| Player1  | Player1$ | Player |
+
+## Deployment (Vercel)
+1. Push to GitHub
+2. Import repo on Vercel, set **Root Directory** to `frontend`
+3. Add environment variables: `MONGO_URI`, `JWT_SECRET_KEY`
+4. Deploy

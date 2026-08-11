@@ -8,6 +8,8 @@ function AuthCard({ onAuthSuccess }) {
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
 
+  const [showPassword, setShowPassword] = useState(false)
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setMessage('')
@@ -50,13 +52,23 @@ function AuthCard({ onAuthSuccess }) {
         </label>
         <label>
           Password
-          <input
-            type="password"
-            value={formData.password}
-            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            placeholder="Letters, numbers, and $ % * &"
-            required
-          />
+          <div className="password-input-wrapper">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              placeholder="Letters, numbers, and $ % * &"
+              required
+            />
+            <button
+              type="button"
+              className="password-toggle-btn"
+              onClick={() => setShowPassword(!showPassword)}
+              title={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? 'Hide' : 'Show'}
+            </button>
+          </div>
         </label>
         {authMode === 'register' && (
           <label className="role-select">

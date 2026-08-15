@@ -51,4 +51,21 @@ export async function getAdminOverview() {
   return apiFetch('/admin/overview')
 }
 
+export async function getAdminUsers() {
+  return apiFetch('/admin/users')
+}
+
+export async function updateAdminUser(username, payload) {
+  return apiFetch(`/admin/users/${encodeURIComponent(username)}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload)
+  })
+}
+
+export async function deleteAdminUser(username) {
+  return apiFetch(`/admin/users/${encodeURIComponent(username)}`, {
+    method: 'DELETE'
+  })
+}
+
 export { getToken, clearToken }

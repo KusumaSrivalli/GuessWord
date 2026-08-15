@@ -159,7 +159,7 @@ function GamePage({ sessionId, gameInfo, onBack, currentUser }) {
         </div>
       )}
 
-      {message && <div className="game-message">{message}</div>}
+      {message && <div className="game-message error-alert">{message}</div>}
 
       <GameGrid guesses={guesses} currentGuess={currentGuess} maxGuesses={5} />
 

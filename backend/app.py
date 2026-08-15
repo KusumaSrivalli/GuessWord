@@ -171,7 +171,7 @@ def make_guess():
         return jsonify({'error': 'Invalid guess or session_id'}), 400
         
     if not is_valid_word(guess):
-        return jsonify({'error': 'Not in word list'}), 400
+        return jsonify({'error': 'Not a valid word'}), 400
         
     session = get_session(session_id)
     if not session:
@@ -402,6 +402,74 @@ def report_user():
         })
         
     return jsonify({'report': result}), 200
+
+@app.route('/api/admin/users', methods=['GET'])
+@jwt_required()
+def admin_get_users():
+    claims = get_jwt()
+    if claims.get('role') != 'admin':
+        return jsonify({'error': 'Admin only'}), 403
+
+    db = get_db()
+    users = list(db.users.find())
+    sessions = list(db.sessions.find())
+
+    user_list = []
+    for u in users:
+        u_name = u.get('username')
+        u_sessions = [s for s in sessions if s.get('username') == u_name]
+        games = len(u_sessions)
+        wins = sum(1 for s in u_sessions if s.get('outcome') == 'won')
+        win_pct = round((wins / games * 100), 1) if games > 0 else 0.0
+        created_at_str = u['created_at'].strftime('%Y-%m-%d') if u.get('created_at') else '2026-08-14'
+
+        user_list.append({
+            'id': str(u['_id']),
+            'username': u_name,
+            'role': u.get('role', 'player'),
+            'games': games,
+            'wins': wins,
+            'win_pct': f"{win_pct:.1f}%",
+            'created_at': created_at_str
+        })
+
+    return jsonify({'users': user_list}), 200
+
+@app.route('/api/admin/users/<username>', methods=['PUT'])
+@jwt_required()
+def admin_update_user(username):
+    claims = get_jwt()
+    if claims.get('role') != 'admin':
+        return jsonify({'error': 'Admin only'}), 403
+
+    db = get_db()
+    data = request.json or {}
+    new_role = data.get('role')
+    new_password = data.get('password')
+
+    update_fields = {}
+    if new_role in ['player', 'admin']:
+        update_fields['role'] = new_role
+    if new_password:
+        update_fields['password_hash'] = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+    if update_fields:
+        db.users.update_one({'username': username}, {'$set': update_fields})
+
+    return jsonify({'message': 'User updated successfully'}), 200
+
+@app.route('/api/admin/users/<username>', methods=['DELETE'])
+@jwt_required()
+def admin_delete_user(username):
+    claims = get_jwt()
+    if claims.get('role') != 'admin':
+        return jsonify({'error': 'Admin only'}), 403
+
+    db = get_db()
+    db.users.delete_one({'username': username})
+    db.sessions.delete_many({'username': username})
+
+    return jsonify({'message': 'User deleted successfully'}), 200
 
 if __name__ == '__main__':
     app.run(port=5000, debug=True)

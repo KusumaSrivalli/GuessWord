@@ -26,8 +26,8 @@ export async function login(username, password) {
 
 export function logout() { clearToken() }
 
-export async function startGame() {
-  return apiFetch('/game/start', { method: 'POST' })
+export async function startGame(mode = 'easy') {
+  return apiFetch('/game/start', { method: 'POST', body: JSON.stringify({ mode }) })
 }
 
 export async function submitGuess(sessionId, guess) {
@@ -40,6 +40,15 @@ export async function getDailyReport() {
 
 export async function getUserReport() {
   return apiFetch('/reports/user')
+}
+
+export async function getUserStats(targetUser) {
+  const query = targetUser ? `?target_user=${encodeURIComponent(targetUser)}` : ''
+  return apiFetch(`/game/user-stats${query}`)
+}
+
+export async function getAdminOverview() {
+  return apiFetch('/admin/overview')
 }
 
 export { getToken, clearToken }

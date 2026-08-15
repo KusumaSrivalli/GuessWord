@@ -1,8 +1,13 @@
 import os
-import certifi
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 from datetime import datetime
+
+try:
+    import certifi
+    HAS_CERTIFI = True
+except ImportError:
+    HAS_CERTIFI = False
 
 client = None
 db = None
@@ -12,11 +17,14 @@ def get_db():
     if db is None:
         mongo_uri = os.environ.get('MONGO_URI', 'mongodb://localhost:27017/guessword')
         if 'mongodb.net' in mongo_uri or 'mongodb+srv' in mongo_uri:
-            client = MongoClient(
-                mongo_uri,
-                serverSelectionTimeoutMS=5000,
-                tlsCAFile=certifi.where()
-            )
+            kwargs = {
+                'serverSelectionTimeoutMS': 7000,
+                'tls': True,
+                'tlsAllowInvalidCertificates': True
+            }
+            if HAS_CERTIFI:
+                kwargs['tlsCAFile'] = certifi.where()
+            client = MongoClient(mongo_uri, **kwargs)
         else:
             client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
 
@@ -44,28 +52,50 @@ def get_all_users():
     _db = get_db()
     return list(_db.users.find())
 
-def get_random_word():
+EASY_WORDS = [
+    "APPLE", "BEACH", "BRAVE", "CLOUD", "DREAM", "FLAME", "GRAPE", "HONEY", "HOUSE", "LEMON",
+    "MANGO", "PEARL", "PLANT", "RIVER", "STARS", "TIGER", "WATER", "WOMAN", "WORLD", "MUSIC",
+    "CHAIR", "SWEET", "HEART", "LIGHT", "SMILE", "TRAIN", "GREEN", "PAPER", "BREAD", "NIGHT"
+]
+
+MEDIUM_WORDS = [
+    "ABYSS", "BRISK", "CHASM", "FROST", "GLYPH", "IVORY", "LURID", "PRISM", "QUIRK", "VALOR",
+    "VORTEX", "ZEPHYR", "AMBER", "BRINE", "CIRCA", "DRUID", "EMBER", "GUILD", "ORBIT", "PIXEL",
+    "QUOTA", "RADAR", "SOLAR", "TEXAS", "VOCAL", "YACHT", "VAGUE", "SHREW", "SQUID", "TWIST"
+]
+
+HARD_WORDS = [
+    "ABACK", "ACRID", "BOSON", "CYNIC", "EPOCH", "FJORD", "GAUNT", "HYDRA", "KAPUT", "NYMPH",
+    "QUAFF", "TRYST", "ZESTY", "AEGIS", "COYLY", "GAFFE", "HAZEL", "IONIC", "JAZZY", "KAZOO",
+    "MYTHS", "ONYX", "PUPAL", "QUART", "RERUN", "SYNOD", "UMBRA", "VIXEN", "WALTZ", "ZINCS"
+]
+
+def get_random_word(mode='easy'):
     _db = get_db()
-    cursor = _db.words.aggregate([{ '$sample': { 'size': 1 } }])
+    cursor = _db.words.aggregate([
+        { '$match': { 'mode': mode } },
+        { '$sample': { 'size': 1 } }
+    ])
     words = list(cursor)
     if words:
         return words[0]['word']
         
-    default_words = [
-        "APPLE", "BRAVE", "CLOUD", "DREAM", "EAGLE", "FLAME", "GRAPE", "HONEY", "IVORY", 
-        "JUMBO", "KNIFE", "LEMON", "MANGO", "NIGHT", "OASIS", "PEARL", "QUICK", "RIVER", 
-        "STARS", "TIGER"
-    ]
-    _db.words.insert_many([{'word': w} for w in default_words])
-    return "APPLE"
+    import random
+    if mode == 'medium':
+        return random.choice(MEDIUM_WORDS)
+    elif mode == 'hard':
+        return random.choice(HARD_WORDS)
+    else:
+        return random.choice(EASY_WORDS)
 
-def create_session(user_id, username, target_word, date):
+def create_session(user_id, username, target_word, date, mode='easy'):
     _db = get_db()
     session = {
         'user_id': user_id,
         'username': username,
         'date': date,
         'target_word': target_word,
+        'mode': mode,
         'guesses': [],
         'outcome': None,
         'created_at': datetime.utcnow(),

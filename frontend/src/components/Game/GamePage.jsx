@@ -5,7 +5,13 @@ import Keyboard from './Keyboard'
 import GameModal from '../Modal/GameModal'
 import './GamePage.css'
 
-function GamePage({ sessionId, onBack, currentUser }) {
+function GamePage({ sessionId, gameInfo, onBack, currentUser }) {
+  const mode = gameInfo?.mode || 'easy'
+  const initialTimeLimit = gameInfo?.timeLimit !== undefined
+    ? gameInfo.timeLimit
+    : (mode === 'medium' ? 300 : mode === 'hard' ? 180 : null)
+  const hint = gameInfo?.hint || ''
+
   const [guesses, setGuesses] = useState([])
   const [currentGuess, setCurrentGuess] = useState('')
   const [status, setStatus] = useState('playing')
@@ -14,6 +20,36 @@ function GamePage({ sessionId, onBack, currentUser }) {
   const [showModal, setShowModal] = useState(false)
   const [modalMessage, setModalMessage] = useState('')
   const [modalType, setModalType] = useState('won')
+  const [timeLeft, setTimeLeft] = useState(initialTimeLimit)
+  const [showHint, setShowHint] = useState(false)
+
+  // Countdown timer for Medium and Hard modes
+  useEffect(() => {
+    if (initialTimeLimit === null || status !== 'playing') return
+
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer)
+          setStatus('lost')
+          setModalType('lost')
+          setModalMessage("⏰ Time's up! You ran out of time for this puzzle.")
+          setShowModal(true)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [initialTimeLimit, status])
+
+  const formatTime = (seconds) => {
+    if (seconds === null) return '∞ No Limit'
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }
 
   const usedLetters = {}
   guesses.forEach(g => {
@@ -39,7 +75,7 @@ function GamePage({ sessionId, onBack, currentUser }) {
       if (data.status === 'won') {
         setStatus('won')
         setModalType('won')
-        setModalMessage('Congratulations! You guessed the word correctly!')
+        setModalMessage('🎉 Congratulations! You guessed the word correctly!')
         setShowModal(true)
       } else if (data.status === 'lost') {
         setStatus('lost')
@@ -91,9 +127,37 @@ function GamePage({ sessionId, onBack, currentUser }) {
 
       <header className="game-page-header">
         <button className="back-btn" onClick={onBack}>← Back</button>
-        <h1>Guess the Word</h1>
-        <span className="pill game-pill">{currentUser.username}</span>
+
+        <div className="game-title-group">
+          <h1>Guess the Word</h1>
+          <span className={`mode-badge mode-${mode}`}>
+            {mode === 'easy' ? '🟢 EASY' : mode === 'medium' ? '🟡 MEDIUM' : '🔴 HARD'}
+          </span>
+        </div>
+
+        <div className="header-meta-group">
+          <div className={`timer-badge ${timeLeft !== null && timeLeft <= 30 ? 'warning' : ''}`}>
+            ⏱️ {formatTime(timeLeft)}
+          </div>
+          <span className="pill game-pill">{currentUser.username}</span>
+        </div>
       </header>
+
+      {/* Word Hint Section (Hard Mode Only) */}
+      {mode === 'hard' && hint && (
+        <div className="hint-section">
+          {!showHint ? (
+            <button className="hint-toggle-btn" onClick={() => setShowHint(true)}>
+              💡 Need a Hint? Click to reveal word meaning
+            </button>
+          ) : (
+            <div className="hint-revealed-card">
+              <span className="hint-icon">💡</span>
+              <span className="hint-text"><strong>Hint / Meaning:</strong> {hint}</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {message && <div className="game-message">{message}</div>}
 

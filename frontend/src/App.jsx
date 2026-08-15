@@ -4,7 +4,8 @@ import Header from './components/Header/Header'
 import AuthCard from './components/Auth/AuthCard'
 import GameCard from './components/Game/GameCard'
 import GamePage from './components/Game/GamePage'
-import AdminReports from './components/Reports/AdminReports'
+import AdminDashboard from './components/Reports/AdminDashboard'
+import LandingPage from './components/Landing/LandingPage'
 import './App.css'
 
 function App() {
@@ -13,15 +14,9 @@ function App() {
   const [sessionId, setSessionId] = useState(null)
   const [startError, setStartError] = useState('')
   const [startLoading, setStartLoading] = useState(false)
-  const [theme, setTheme] = useState(() => localStorage.getItem('app-theme') || 'dark')
 
-  useEffect(() => {
-    localStorage.setItem('app-theme', theme)
-  }, [theme])
-
-  const toggleTheme = () => {
-    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'))
-  }
+  const [activeGameInfo, setActiveGameInfo] = useState({ mode: 'easy', timeLimit: null })
+  const [statsKey, setStatsKey] = useState(0)
 
   const handleLogout = () => {
     apiLogout()
@@ -30,13 +25,19 @@ function App() {
     setSessionId(null)
   }
 
-  const handleStartGame = async () => {
+  const handleStartGame = async (selectedMode = 'easy') => {
     setStartError('')
     setStartLoading(true)
     try {
-      const data = await apiStartGame()
+      const data = await apiStartGame(selectedMode)
       setSessionId(data.session_id)
+      setActiveGameInfo({
+        mode: data.mode || selectedMode,
+        timeLimit: data.time_limit,
+        hint: data.hint
+      })
       setView('game')
+      setStatsKey(prev => prev + 1)
     } catch (err) {
       setStartError(err.error || 'Could not start new game')
     } finally {
@@ -47,36 +48,37 @@ function App() {
   const handleGameEnd = () => {
     setView('dashboard')
     setSessionId(null)
+    setStatsKey(prev => prev + 1)
   }
 
   return (
-    <div className={`app-shell theme-${theme}`}>
+    <div className="app-shell theme-dark">
       {!currentUser ? (
-        <>
-          <Header currentUser={null} theme={theme} onToggleTheme={toggleTheme} />
-          <AuthCard onAuthSuccess={(user) => setCurrentUser(user)} />
-        </>
-      ) : view === 'game' && sessionId ? (
+        <LandingPage onAuthSuccess={(user) => setCurrentUser(user)} />
+      ) : view === 'game' && sessionId && currentUser.role !== 'admin' ? (
         <GamePage
           sessionId={sessionId}
+          gameInfo={activeGameInfo}
           onBack={handleGameEnd}
           currentUser={currentUser}
-          theme={theme}
-          onToggleTheme={toggleTheme}
         />
       ) : (
         <>
-          <Header currentUser={currentUser} theme={theme} onToggleTheme={toggleTheme} />
-          <div className={`dashboard-grid ${currentUser.role === 'admin' ? 'has-admin' : 'full-width'}`}>
-            <GameCard
-              currentUser={currentUser}
-              onLogout={handleLogout}
-              onStartGame={handleStartGame}
-              loading={startLoading}
-              error={startError}
-            />
-            {currentUser.role === 'admin' && <AdminReports />}
-          </div>
+          <Header currentUser={currentUser} onLogout={handleLogout} />
+          {currentUser.role === 'admin' ? (
+            <AdminDashboard currentUser={currentUser} />
+          ) : (
+            <div className="dashboard-grid full-width">
+              <GameCard
+                key={statsKey}
+                currentUser={currentUser}
+                onLogout={handleLogout}
+                onStartGame={handleStartGame}
+                loading={startLoading}
+                error={startError}
+              />
+            </div>
+          )}
         </>
       )}
     </div>

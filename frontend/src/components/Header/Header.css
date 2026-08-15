@@ -1,59 +1,142 @@
-.hero-card {
+.navbar-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
-  padding: 24px 28px;
-  margin: 0 auto 24px;
-  max-width: 1120px;
+  padding: 14px 28px;
+  background: #0d1527;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 28px;
+  border-radius: 16px;
 }
 
-.eyebrow {
-  font-size: 0.8rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: #8db7ff;
-  margin: 0 0 8px;
-}
-
-.hero-card h1 {
-  margin: 0 0 8px;
-  font-size: 2.3rem;
-}
-
-.subtitle {
-  margin: 0;
-  color: #d5e2f2;
-  max-width: 720px;
-}
-
-.header-right {
+.navbar-left {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   gap: 12px;
 }
 
-.pill-box {
+.logo-badge {
+  background: #0284c7;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  border-radius: 6px;
+  letter-spacing: -0.05em;
+}
+
+.brand-name {
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  color: #ffffff;
+}
+
+.brand-accent {
+  color: #38bdf8;
+}
+
+.navbar-center {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
+}
+
+.nav-tab {
+  display: flex;
+  align-items: center;
   gap: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  padding: 8px 20px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-profile-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 6px 14px 6px 8px;
+  border-radius: 999px;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #7c3aed;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+.user-name {
+  font-weight: 700;
+  color: #f1f5f9;
+  font-size: 0.95rem;
+}
+
+.role-pill {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.role-pill.role-player {
+  background: #064e3b;
+  color: #34d399;
+}
+
+.role-pill.role-admin {
+  background: #701a75;
+  color: #f0abfc;
+}
+
+.logout-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #f1f5f9;
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logout-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .theme-toggle-btn {
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 999px;
-  padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #f4f7fb;
-  font-size: 0.85rem;
-  font-weight: 600;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  padding: 8px 12px;
+  border-radius: 50%;
   cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
+  font-size: 1rem;
 }
 
-.theme-toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.18);
-  transform: translateY(-1px);
+@media (max-width: 768px) {
+  .navbar-container {
+    flex-direction: column;
+    gap: 12px;
+  }
 }

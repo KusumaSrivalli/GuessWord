@@ -337,8 +337,50 @@ DICTIONARY = {
     "ZONAL", "ZONES"
 }
 
+import os
+import json
+import urllib.request
+import urllib.parse
+from models import get_db
+
+def verify_word_with_llm_api(word):
+    """Verifies a 5-letter word using Gemini LLM API or Free Dictionary API"""
+    upper_word = word.upper()
+    
+    # 1. Try Gemini API if key is present
+    gemini_key = os.environ.get('GEMINI_API_KEY')
+    if gemini_key:
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+            prompt = f"Is '{upper_word}' a valid 5-letter English word? Answer ONLY YES or NO."
+            payload = json.dumps({
+                "contents": [{"parts": [{"text": prompt}]}]
+            }).encode('utf-8')
+            req = urllib.request.Request(url, data=payload, headers={'Content-Type': 'application/json'})
+            with urllib.request.urlopen(req, timeout=3) as resp:
+                result = json.loads(resp.read().decode('utf-8'))
+                answer = result['candidates'][0]['content']['parts'][0]['text'].strip().upper()
+                if "YES" in answer:
+                    return True
+                elif "NO" in answer:
+                    return False
+        except Exception:
+            pass
+
+    # 2. Free Dictionary API verification fallback
+    try:
+        dict_url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{urllib.parse.quote(word.lower())}"
+        req = urllib.request.Request(dict_url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=3) as resp:
+            if resp.status == 200:
+                return True
+    except Exception:
+        pass
+
+    return False
+
 def is_valid_word(word):
-    if not word or len(word) != 5:
+    if not word or len(word) != 5 or not word.isalpha():
         return False
         
     upper_word = word.upper()
@@ -354,13 +396,7 @@ def is_valid_word(word):
     except Exception:
         pass
 
-    # Sanity check fallback for any valid 5-letter English word containing vowels
-    vowels = set("AEIOUY")
-    has_vowel = any(char in vowels for char in upper_word)
-    is_alpha = upper_word.isalpha()
-    
-    gibberish = {"JMKFG", "QWERT", "ASDFG", "ZXCVB", "QAZWS", "WSXED", "RFVTG", "TGBNH", "YHNMJ", "UJMKI"}
-    if upper_word in gibberish:
-        return False
+    # Strictly verify via LLM / Dictionary API
+    return verify_word_with_llm_api(upper_word)
 
-    return is_alpha and has_vowel
+

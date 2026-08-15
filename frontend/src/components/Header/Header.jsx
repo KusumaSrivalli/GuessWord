@@ -1,29 +1,43 @@
 import './Header.css'
 
-function Header({ currentUser, theme, onToggleTheme }) {
+function Header({ currentUser, onLogout }) {
+  const getInitial = (name) => {
+    return name ? name.charAt(0).toUpperCase() : 'U'
+  }
+
   return (
-    <header className="hero-card">
-      <div>
-        <p className="eyebrow">Guess the Word</p>
-        <h1>Word Guessing Game</h1>
-        <p className="subtitle">
-          Register, log in, play up to 3 words per day, and review admin reports.
-        </p>
+    <header className="navbar-container">
+      <div className="navbar-left">
+        <div className="logo-badge">abc</div>
+        <span className="brand-name">
+          GUESS <span className="brand-accent">THE WORD</span>
+        </span>
       </div>
-      <div className="header-right">
-        {currentUser && (
-          <div className="pill-box">
-            <span className="pill">{currentUser.role} account</span>
-            <span className="pill">Max 3 games / day</span>
-          </div>
-        )}
-        <button
-          className="theme-toggle-btn"
-          onClick={onToggleTheme}
-          title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
-        >
-          {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
-        </button>
+
+      {currentUser && (
+        <div className="navbar-center">
+          <button className="nav-tab active">
+            <span className="tab-icon">🎮</span> Play Game
+          </button>
+        </div>
+      )}
+
+      <div className="navbar-right">
+        {currentUser ? (
+          <>
+            <div className="user-profile-badge">
+              <div className="user-avatar">{getInitial(currentUser.username)}</div>
+              <span className="user-name">{currentUser.username}</span>
+              <span className={`role-pill role-${currentUser.role}`}>
+                {currentUser.role.toUpperCase()}
+              </span>
+            </div>
+
+            <button className="logout-btn" onClick={onLogout} title="Log out">
+              Logout
+            </button>
+          </>
+        ) : null}
       </div>
     </header>
   )

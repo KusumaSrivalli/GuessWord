@@ -9,9 +9,10 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 from bson import ObjectId
 
 from word_validation import is_valid_word
+from word_hints import get_word_hint
 
 from models import (
-    create_user, find_user_by_username, get_all_users, get_random_word,
+    get_db, create_user, find_user_by_username, get_all_users, get_random_word,
     create_session, get_session, update_session, get_sessions_for_user_on_date,
     get_all_sessions
 )
@@ -106,6 +107,10 @@ def login():
 @jwt_required()
 def start_game():
     username = get_jwt_identity()
+    data = request.json or {}
+    mode = data.get('mode', 'easy').lower()
+    if mode not in ['easy', 'medium', 'hard']:
+        mode = 'easy'
     
     date_str = datetime.now(timezone.utc).strftime('%Y-%m-%d')
     sessions_today = get_sessions_for_user_on_date(username, date_str)
@@ -113,14 +118,23 @@ def start_game():
     if len(sessions_today) >= 3:
         return jsonify({'error': 'Daily limit reached'}), 403
         
-    target_word = get_random_word()
+    target_word = get_random_word(mode)
     if not target_word:
         return jsonify({'error': 'No words available in database'}), 500
         
+    hint = get_word_hint(target_word)
     user = find_user_by_username(username)
-    session_id = create_session(user['_id'], username, target_word, date_str)
+    session_id = create_session(user['_id'], username, target_word, date_str, mode=mode)
     
-    return jsonify({'session_id': str(session_id), 'message': 'Game started'}), 200
+    time_limit = 300 if mode == 'medium' else 180 if mode == 'hard' else None
+    
+    return jsonify({
+        'session_id': str(session_id),
+        'mode': mode,
+        'time_limit': time_limit,
+        'hint': hint,
+        'message': f'Game started in {mode.upper()} mode'
+    }), 200
 
 def get_feedback(guess, target):
     feedback = ['grey'] * 5
@@ -199,6 +213,127 @@ def make_guess():
         resp['target_word'] = target_word
         
     return jsonify(resp), 200
+
+@app.route('/api/game/user-stats', methods=['GET'])
+@jwt_required()
+def get_user_stats():
+    from datetime import timedelta
+    current_user = get_jwt_identity()
+    claims = get_jwt()
+
+    target_user = request.args.get('target_user')
+    if target_user and claims.get('role') == 'admin':
+        username = target_user
+    else:
+        username = current_user
+
+    db = get_db()
+    sessions = list(db.sessions.find({'username': username}))
+    
+    total_games = len(sessions)
+    total_wins = sum(1 for s in sessions if s.get('outcome') == 'won')
+    win_rate = round((total_wins / total_games * 100), 1) if total_games > 0 else 0.0
+    
+    date_str_today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+    
+    sessions_today_map = {}
+    for s in sessions:
+        s_date = s.get('date')
+        c_date = s['created_at'].strftime('%Y-%m-%d') if s.get('created_at') else None
+        if s_date == date_str_today or c_date == date_str_today:
+            sessions_today_map[str(s['_id'])] = s
+            
+    games_left_today = max(0, 3 - len(sessions_today_map))
+    
+    heatmap = []
+    today_dt = datetime.now(timezone.utc)
+    for i in range(29, -1, -1):
+        day_dt = today_dt - timedelta(days=i)
+        d_str = day_dt.strftime('%Y-%m-%d')
+        label = day_dt.strftime('%b %d')
+        
+        day_games_map = {}
+        for s in sessions:
+            s_d = s.get('date')
+            c_d = s['created_at'].strftime('%Y-%m-%d') if s.get('created_at') else None
+            if s_d == d_str or c_d == d_str:
+                day_games_map[str(s['_id'])] = s
+                
+        heatmap.append({'date': d_str, 'label': label, 'count': len(day_games_map)})
+        
+    current_streak = 0
+    for i in range(30):
+        d_str = (today_dt - timedelta(days=i)).strftime('%Y-%m-%d')
+        day_games = sum(1 for s in sessions if s.get('date') == d_str or (s.get('created_at') and s['created_at'].strftime('%Y-%m-%d') == d_str))
+        if day_games > 0:
+            current_streak += 1
+        else:
+            if i == 0:
+                continue
+            break
+
+    return jsonify({
+        'username': username,
+        'total_games': total_games,
+        'total_wins': total_wins,
+        'win_rate': f"{win_rate:.1f}%",
+        'current_streak': current_streak,
+        'games_left_today': games_left_today,
+        'games_played_today': len(sessions_today_map),
+        'heatmap': heatmap
+    }), 200
+
+@app.route('/api/admin/overview', methods=['GET'])
+@jwt_required()
+def admin_overview():
+    claims = get_jwt()
+    if claims.get('role') != 'admin':
+        return jsonify({'error': 'Admin only'}), 403
+
+    db = get_db()
+    users = list(db.users.find({'role': 'player'}))
+    sessions = list(db.sessions.find())
+
+    total_users = len(users)
+    total_games = len(sessions)
+    total_wins = sum(1 for s in sessions if s.get('outcome') == 'won')
+
+    daily_map = {}
+    for s in sessions:
+        d = s.get('date', 'Unknown')
+        u = s.get('username', 'Unknown')
+        if d not in daily_map:
+            daily_map[d] = {}
+        if u not in daily_map[d]:
+            daily_map[d][u] = {'games_played': 0, 'games_won': 0}
+        
+        daily_map[d][u]['games_played'] += 1
+        if s.get('outcome') == 'won':
+            daily_map[d][u]['games_won'] += 1
+
+    daily_report = []
+    for d in sorted(daily_map.keys(), reverse=True):
+        user_list = []
+        for u, counts in daily_map[d].items():
+            user_list.append({
+                'username': u,
+                'games_played': counts['games_played'],
+                'games_won': counts['games_won']
+            })
+        daily_report.append({
+            'date': d,
+            'users_activity': user_list
+        })
+
+    user_names = [u['username'] for u in users]
+
+    return jsonify({
+        'total_users': total_users,
+        'total_games': total_games,
+        'total_wins': total_wins,
+        'user_names': user_names,
+        'daily_report': daily_report
+    }), 200
 
 @app.route('/api/reports/daily', methods=['GET'])
 @jwt_required()

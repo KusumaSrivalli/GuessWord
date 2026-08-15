@@ -7,10 +7,13 @@ A feature-packed, production-ready 5-letter word puzzle application built with *
 ## 📌 Table of Contents
 - [🌐 Live Demo](#-live-demo)
 - [✨ Key Features](#-key-features)
+- [🔐 Authentication Flow](#-authentication-flow)
+- [⚙️ Request Flow](#️-request-flow)
+- [🔗 API Endpoints Reference](#-api-endpoints-reference)
 - [✅ Requirements Coverage](#-requirements-coverage)
 - [🚀 Beyond the Requirements](#-beyond-the-requirements)
 - [🧠 Design Decisions](#-design-decisions)
-- [🏗️ Architecture & Flow](#️-architecture--flow)
+- [🏗️ Architecture](#️-architecture)
 - [🗂️ Data Model](#️-data-model)
 - [🔒 Role-Based Access Control (RBAC)](#-role-based-access-control-rbac)
 - [📁 Project Structure](#-project-structure)
@@ -45,6 +48,112 @@ A feature-packed, production-ready 5-letter word puzzle application built with *
 - 🔥 **30-Day Consistency Heatmap**: Interactive 3-row × 10-column activity grid tracking games played daily with color intensity levels (`Less ... More (Max 3/day)`).
 - 👑 **Admin Analytics Portal**: Dedicated admin view featuring a 5-day date filter bar, total active users, games played, games won, per-user victory tables, and an interactive 30-day heatmap inspector modal. Game access is disabled for admins.
 - 🎨 **Animated Landing Page**: Features an animated 5x5 grid preview simulating live step-by-step typing and 3D flip reveals for the target word `PLANT`.
+
+---
+
+## 🔐 Authentication Flow
+
+```mermaid
+sequenceDiagram
+    participant B as Browser
+    participant F as React Frontend
+    participant A as Flask REST API
+    participant D as MongoDB Database
+
+    B->>F: Submit Login / Register Form
+    F->>A: POST /api/auth/login {username, password}
+    A->>D: db.users.find_one({username})
+    D-->>A: User Document
+    A->>A: Verify bcrypt password hash
+    A->>A: Generate JWT Access Token (claims: sub, role)
+    A-->>F: 200 OK {token, user: {username, role}}
+    F->>F: Store token in localStorage
+    F-->>B: Redirect to Dashboard / Game
+
+    Note over B,A: Subsequent requests carry Authorization: Bearer <token>
+
+    B->>F: Click "Logout"
+    F->>F: Clear token from localStorage
+    F-->>B: Redirect to Landing Page
+```
+
+---
+
+## ⚙️ Request Flow
+
+```
+Browser ──> React Page (Vite) ──> API Client (apiFetch) ──> Flask Route Handler
+                                                                   │
+                                                        ┌──────────▼───────────┐
+                                                        │  Dependency Chain    │
+                                                        │                      │
+                                                        │  get_db()            │  <── PyMongo Client Connection
+                                                        │  jwt_required()      │  <── Bearer Token ──> Identity
+                                                        │  role_check()        │  <── Role == "admin" (Admin Only)
+                                                        └──────────┬───────────┘
+                                                                   │
+                                                        ┌──────────▼───────────┐
+                                                        │  Service Layer       │
+                                                        │                      │
+                                                        │  word_validation.py  │  <── Gemini LLM & Dictionary API
+                                                        │  word_hints.py       │  <── Definition Hint Lookup
+                                                        │  models.py           │  <── Vocab Pool & Session Logic
+                                                        └──────────┬───────────┘
+                                                                   │
+                                                        ┌──────────▼───────────┐
+                                                        │  MongoDB Database    │
+                                                        │  (PyMongo Driver)    │
+                                                        └──────────┬───────────┘
+                                                                   │
+                                                            MongoDB Atlas
+```
+
+---
+
+## 🔗 API Endpoints
+
+Base URL: `http://<BACKEND_URL>/api`
+
+### Auth (4 endpoints)
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/auth/register` | 🔓 | Register a new player account |
+| `POST` | `/auth/login` | 🔓 | Login → creates session → issues JWT token |
+| `POST` | `/auth/logout` | 🔒 | Logout → clears session token |
+| `GET` | `/auth/me` | 🔒 | Get current authenticated user details |
+
+### Game (6 endpoints)
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/game/start` | 🔒 | Start a new game (enforces 3/day limit & difficulty mode) |
+| `POST` | `/game/guess` | 🔒 | Submit a 5-letter guess validated via Gemini LLM API |
+| `GET` | `/game/current` | 🔒 | Get active in-progress game session |
+| `GET` | `/game/{id}` | 🔒 | Get a specific game session state |
+| `GET` | `/game/user-stats` | 🔒 | Get player stats (wins, streak, 30-day heatmap grid) |
+| `GET` | `/game/history` | 🔒 | Get all completed games with full attempt history |
+
+### Settings (3 endpoints)
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/settings/check-username/{name}` | 🔒 | Live username availability check |
+| `PUT` | `/settings/profile` | 🔒 | Update display name / username |
+| `PUT` | `/settings/password` | 🔒 | Change password (requires current password) |
+
+### Admin (9 endpoints)
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/admin/overview` | 👑 | Overview summary stats & 5-day daily user breakdown |
+| `GET` | `/admin/report/daily` | 👑 | Daily report — users, games, correct guesses (`?date=YYYY-MM-DD`) |
+| `GET` | `/admin/report/daily-range` | 👑 | Date range report (`?from_date=...&to_date=...`) |
+| `GET` | `/admin/report/user/{id}` | 👑 | User report — date, words tried, correct guesses |
+| `GET` | `/admin/users` | 👑 | List all users (search, sort, filter) |
+| `PUT` | `/admin/users/{id}` | 👑 | Edit user (name, username, role, password) |
+| `DELETE` | `/admin/users/{id}` | 👑 | Delete user (cascades games & guesses) |
+| `GET` | `/admin/words` | 👑 | List all words in dictionary |
+| `POST` | `/admin/words` | 👑 | Add a new 5-letter word |
+| `DELETE` | `/admin/words/{id}` | 👑 | Remove a word from dictionary |
+
+`🔓 = Public` &nbsp;&nbsp;&nbsp;&nbsp; `🔒 = Authenticated (any role)` &nbsp;&nbsp;&nbsp;&nbsp; `👑 = Admin only`
 
 ---
 
@@ -94,7 +203,7 @@ A feature-packed, production-ready 5-letter word puzzle application built with *
 
 ---
 
-## 🏗️ Architecture & Flow
+## 🏗️ Architecture
 
 ```
 ┌──────────────────────────────────────────┐         ┌──────────────────────────────────────────┐

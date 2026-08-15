@@ -26,7 +26,7 @@ A feature-packed, production-ready 5-letter word puzzle application built with *
 
 | Surface | URL / Access |
 | :--- | :--- |
-| 🎮 **Frontend App** | [guess-the-word.vercel.app](https://guess-the-word.vercel.app) |
+| 🎮 **Frontend App** | [guess-the-word.vercel.app](https://guess-word-dun.vercel.app/) |
 | 🗄️ **Database** | MongoDB Atlas Cloud Cluster |
 
 ### Demo Credentials

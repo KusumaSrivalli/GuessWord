@@ -234,7 +234,7 @@ function AdminDashboard({ currentUser }) {
       {/* 1. Left Sidebar Navigation (Matching Screenshot 1) */}
       <aside className="admin-sidebar">
         <div className="sidebar-brand">
-          <div className="brand-logo-icon">W</div>
+          <div className="brand-logo-icon">abc</div>
           <div className="brand-title-group">
             <span className="sidebar-sub">Admin Dashboard</span>
           </div>

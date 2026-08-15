@@ -27,17 +27,18 @@
 }
 
 .brand-logo-icon {
-  width: 42px;
-  height: 42px;
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  background: #0284c7;
   color: #ffffff;
   font-weight: 800;
-  font-size: 1.4rem;
+  font-size: 0.85rem;
+  padding: 5px 9px;
+  border-radius: 8px;
+  letter-spacing: -0.05em;
+  font-family: inherit;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.4);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
 }
 
 .brand-title-group h2 {
